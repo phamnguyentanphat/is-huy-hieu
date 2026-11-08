@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Tải huy hiệu nghiệp vụ</title>
+<style>
+:root{--bg:#f5f3ef;--card:#fff;--ink:#1e1c18;--muted:#5c5648;--line:#e2ddd6;--btn:#b4561f}
+@media (prefers-color-scheme:dark){:root{--bg:#1a1917;--card:#242320;--ink:#f2efe8;--muted:#b9b2a3;--line:#3a3833;--btn:#d0702f}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px 24px;text-align:center}
+img{display:block;width:240px;height:240px;max-width:100%;margin:0 auto 16px}
+h1{margin:0 0 6px;font-size:20px}
+p{margin:0 0 18px;color:var(--muted);font-size:14px;word-break:break-word}
+button{min-height:44px;padding:12px 26px;border:0;border-radius:10px;background:var(--btn);color:#fff;font:700 15px/1 inherit;cursor:pointer}
+button:disabled{opacity:.6;cursor:default}
+.msg{margin:14px 0 0;min-height:20px}
+</style>
+</head>
+<body>
+<main>
+  <img id="anh" alt="Huy hiệu nghiệp vụ">
+  <h1>Huy hiệu nghiệp vụ</h1>
+  <p id="ten">Đang chuẩn bị file…</p>
+  <button id="tai" type="button" disabled>Tải huy hiệu</button>
+  <p class="msg" id="msg" aria-live="polite"></p>
+</main>
+<script>
+(function(){
+  // Đường dẫn: tai.html?h=<mã nghiệp vụ>-<số sao>#<Họ tên>|<Nghiệp vụ>|<YYYY-MM-DD>
+  // Họ tên nằm sau dấu # nên không gửi lên máy chủ.
+  var msg=document.getElementById('msg'),btn=document.getElementById('tai'),ten=document.getElementById('ten'),anh=document.getElementById('anh');
+  var h=(new URLSearchParams(location.search).get('h')||'').toLowerCase();
+  if(!/^[a-z-]+-[123]$/.test(h)){ten.textContent='Đường dẫn không đúng. Mở lại nút tải trong email.';return;}
+  var raw=location.hash.slice(1),parts;
+  try{raw=decodeURIComponent(raw.replace(/\+/g,' '));}catch(e){}
+  parts=raw.split('|').map(function(s){return s.trim();});
+  var hoTen=parts[0]||'Huy hieu',nv=parts[1]||h.replace(/-[123]$/,''),ngay=parts[2]||'';
+  var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(ngay);if(m)ngay=m[3]+'-'+m[2]+'-'+m[1];
+  var name=[hoTen,nv,ngay].filter(Boolean).join(' - ').replace(/[\\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim()+'.gif';
+  var src='huy-hieu-'+h.replace(/-([123])$/,'-$1sao')+'.gif';
+  anh.src=src;ten.textContent=name;
+  var blobUrl=null;
+  function save(){if(!blobUrl)return;var a=document.createElement('a');a.href=blobUrl;a.download=name;document.body.appendChild(a);a.click();a.remove();msg.textContent='Đã tải: '+name;}
+  fetch(src).then(function(r){if(!r.ok)throw new Error(r.status);return r.blob();}).then(function(b){
+    blobUrl=URL.createObjectURL(b);btn.disabled=false;btn.onclick=save;save();
+  }).catch(function(){msg.textContent='Chưa tải được ảnh. Thử lại sau ít phút.';});
+})();
+</script>
+</body>
+</html>
